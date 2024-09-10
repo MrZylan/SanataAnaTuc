@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Santa Ana Publica</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .content-box {
+            margin-bottom: 20px;
+        }
+        .content-box textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        .content-box input[type="file"] {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .content-box button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .content-box button:hover {
+            background-color: #0056b3;
+        }
+        .post {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        .post img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .pagination button:hover {
+            background-color: #0056b3;
+        }
+        .pagination .page-numbers {
+            margin: 0 20px;
+            font-size: 16px;
+        }
+        .pagination .page-numbers span {
+            margin: 0 5px;
+            cursor: pointer;
+            color: #007bff;
+        }
+        .pagination .page-numbers span.active {
+            font-weight: bold;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Santa Ana Publica</h1>
+        <div class="content-box">
+            <textarea id="textContent" placeholder="Escribe algo aquí..."></textarea>
+            <input type="file" id="imageUpload" accept="image/*">
+            <button onclick="publishContent()">Publicar</button>
+        </div>
+        <div id="posts"></div>
+        <div class="pagination">
+            <button id="prevPage" onclick="changePage(-1)" disabled>Anterior</button>
+            <div class="page-numbers" id="pageNumbers"></div>
+            <button id="nextPage" onclick="changePage(1)">Siguiente</button>
+        </div>
+    </div>
+
+    <script>
+        let posts = [];
+        let currentPage = 0;
+        const postsPerPage = 10;
+
+        function publishContent() {
+            const textContent = document.getElementById('textContent').value;
+            const imageUpload = document.getElementById('imageUpload').files[0];
+
+            if (textContent || imageUpload) {
+                const post = { text: textContent, image: imageUpload };
+                posts.unshift(post); // Add new post at the beginning
+                renderPosts();
+                clearInputs();
+            }
+        }
+
+        function renderPosts() {
+            const postsDiv = document.getElementById('posts');
+            postsDiv.innerHTML = '';
+
+            const start = currentPage * postsPerPage;
+            const end = start + postsPerPage;
+            const paginatedPosts = posts.slice(start, end);
+
+            paginatedPosts.forEach(post => {
+                const postDiv = document.createElement('div');
+                postDiv.classList.add('post');
+
+                if (post.text) {
+                    const textElement = document.createElement('p');
+                    textElement.textContent = post.text;
+                    postDiv.appendChild(textElement);
+                }
+
+                if (post.image) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const imgElement = document.createElement('img');
+                        imgElement.src = e.target.result;
+                        postDiv.appendChild(imgElement);
+                    }
+                    reader.readAsDataURL(post.image);
+                }
+
+                postsDiv.appendChild(postDiv);
+            });
+
+            updatePaginationButtons();
+        }
+
+        function updatePaginationButtons() {
+            const totalPages = Math.ceil(posts.length / postsPerPage);
+            const pageNumbersDiv = document.getElementById('pageNumbers');
+            pageNumbersDiv.innerHTML = '';
+
+            for (let i = 0; i < totalPages; i++) {
+                const pageSpan = document.createElement('span');
+                pageSpan.textContent = i + 1;
+                pageSpan.className = i === currentPage ? 'active' : '';
+                pageSpan.onclick = () => {
+                    currentPage = i;
+                    renderPosts();
+                };
+                pageNumbersDiv.appendChild(pageSpan);
+            }
+
+            document.getElementById('prevPage').disabled = currentPage === 0;
+            document.getElementById('nextPage').disabled = (currentPage + 1) * postsPerPage >= posts.length;
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            renderPosts();
+        }
+
+        function clearInputs() {
+            document.getElementById('textContent').value = '';
+            document.getElementById('imageUpload').value = '';
+        }
+
+        renderPosts(); // Initial render
+    </script>
+</body>
+</html>
